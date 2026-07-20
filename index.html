@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Portal - Autoshop</title>
+    <link rel="stylesheet" href="dashboard.css" />
+    <link rel="icon" type="image/x-icon" href="logo.ico" />
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <main class="admin-container">
+      <!-- THE LOGIN VAULT -->
+      <div id="login-section" class="admin-card">
+        <h2 class="text-center">Admin Access</h2>
+        <div class="input-group">
+          <label class="form-label" for="adminEmail">Email</label>
+          <input
+            type="email"
+            id="adminEmail"
+            class="form-control"
+            placeholder="admin@autoshop.com"
+          />
+        </div>
+        <div class="input-group">
+          <label class="form-label" for="adminPassword">Password</label>
+          <input
+            type="password"
+            id="adminPassword"
+            class="form-control"
+            placeholder="••••••••"
+          />
+        </div>
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAD5MzKDYYojMC_1I"></div>
+        <button id="loginBtn" class="btn btn-primary">Secure Login</button>
+        <div id="loginError" class="text-danger"></div>
+      </div>
+
+      <!-- THE DASHBOARD (Hidden until logged in) -->
+      <div id="dashboard-section" style="display: none">
+        <!-- INVENTORY LIST VIEW -->
+        <div id="inventory-view" class="admin-card">
+          <div class="header-flex">
+            <h2>Inventory</h2>
+            <button id="logoutBtn" class="btn-outline">Logout</button>
+          </div>
+          <button id="showAddFormBtn" class="btn btn-primary mb-4">
+            + Add New Vehicle
+          </button>
+
+          <!-- Vehicles will be injected here by JavaScript -->
+          <div id="vehiclesList" class="vehicles-list"></div>
+        </div>
+
+        <!-- ADD/EDIT FORM VIEW (Hidden by default) -->
+        <div id="form-view" class="admin-card" style="display: none">
+          <div class="header-flex">
+            <h2 id="formTitle">Add New Vehicle</h2>
+            <button id="cancelBtn" class="btn-outline">Cancel</button>
+          </div>
+
+          <form id="vehicleForm">
+            <div class="input-group">
+              <label class="form-label" for="make_model">Make & Model</label>
+              <input
+                type="text"
+                id="make_model"
+                class="form-control"
+                placeholder="e.g. 2018 Mercedes-Benz S-Class"
+                required
+              />
+            </div>
+
+            <div class="input-row">
+              <div class="input-group half-width">
+                <label class="form-label" for="year">Year</label>
+                <input
+                  type="text"
+                  id="year"
+                  class="form-control"
+                  placeholder="2018"
+                  required
+                />
+              </div>
+              <div class="input-group half-width">
+                <label class="form-label" for="fuel">Fuel</label>
+                <input
+                  type="text"
+                  id="fuel"
+                  class="form-control"
+                  placeholder="Benzina"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="input-row">
+              <div class="input-group half-width">
+                <label class="form-label" for="km">Mileage (km)</label>
+                <input
+                  type="text"
+                  id="km"
+                  class="form-control"
+                  placeholder="35.000"
+                  required
+                />
+              </div>
+              <div class="input-group half-width">
+                <label class="form-label" for="price">Price</label>
+                <input
+                  type="text"
+                  id="price"
+                  class="form-control"
+                  placeholder="€45,999"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="form-label" for="description">Description</label>
+              <textarea
+                id="description"
+                class="form-control"
+                rows="4"
+                required
+              ></textarea>
+            </div>
+
+            <div class="input-group">
+              <label class="form-label" for="imageFile"
+                >Vehicle Image
+                <span
+                  id="imageOptionalText"
+                  style="color: var(--text-muted); font-size: 0.75rem"
+                ></span
+              ></label>
+              <input
+                type="file"
+                id="imageFile"
+                class="form-control file-input"
+                accept="image/*"
+                required
+              />
+            </div>
+
+            <button type="submit" id="saveBtn" class="btn btn-primary">
+              Save Vehicle
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script src="dashboard.js"></script>
+  </body>
+</html>
