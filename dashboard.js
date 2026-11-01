@@ -36,7 +36,7 @@ db.auth.onAuthStateChange((event, session) => {
     loginSection.style.display = "block"
     dashboardSection.style.display = "none"
     formView.style.display = "none"
-    vehiclesList.innerHTML = ""
+    vehiclesList.replaceChildren()
   }
 })
 
@@ -110,32 +110,81 @@ document.getElementById("cancelBtn").addEventListener("click", () => {
 
 // --- FETCH & DISPLAY VEHICLES ---
 async function loadVehicles() {
+  // Removed .eq("is_visible", true) so Admin can see BOTH visible and hidden cars!
   const { data, error } = await db
     .from("vehicles")
     .select("*")
     .order("id", { ascending: false })
   if (error) return console.error(error)
 
-  vehiclesList.innerHTML = ""
+  vehiclesList.replaceChildren()
   data.forEach((car) => {
     const carEl = document.createElement("div")
     carEl.className = "vehicle-item"
-    carEl.innerHTML = `
-      <div class="vehicle-info">
-        <h3>${car.make_model}</h3>
-        <p>${car.price} • ${car.km} km</p>
-      </div>
-      <div class="vehicle-actions">
-        <button class="action-btn edit" onclick="editVehicle('${car.id}')">Edit</button>
-        <button class="action-btn delete" onclick="deleteVehicle('${car.id}')">Delete</button>
-      </div>
-    `
+    // Slightly dim the row if the car is hidden so the admin can tell at a glance
+    if (!car.is_visible) carEl.style.opacity = "0.6"
+
+    const vehicleInfo = document.createElement("div")
+    vehicleInfo.className = "vehicle-info"
+
+    const title = document.createElement("h3")
+    title.textContent = car.make_model ?? ""
+    if (!car.is_visible) {
+      const hiddenLabel = document.createElement("span")
+      hiddenLabel.textContent = " (Hidden)"
+      hiddenLabel.style.fontSize = "0.8rem"
+      hiddenLabel.style.color = "#ff6b6b"
+      hiddenLabel.style.marginLeft = "8px"
+      title.appendChild(hiddenLabel)
+    }
+
+    const details = document.createElement("p")
+    details.textContent = `${car.price} - ${car.km} km`
+    vehicleInfo.append(title, details)
+
+    const actions = document.createElement("div")
+    actions.className = "vehicle-actions"
+    actions.style.display = "flex"
+    actions.style.alignItems = "center"
+    actions.style.gap = "10px"
+
+    const visibilityLabel = document.createElement("label")
+    visibilityLabel.style.display = "inline-flex"
+    visibilityLabel.style.alignItems = "center"
+    visibilityLabel.style.gap = "6px"
+    visibilityLabel.style.cursor = "pointer"
+    visibilityLabel.style.fontSize = "0.9rem"
+    visibilityLabel.style.margin = "0"
+
+    const visibilityToggle = document.createElement("input")
+    visibilityToggle.type = "checkbox"
+    visibilityToggle.checked = Boolean(car.is_visible)
+    visibilityToggle.style.cursor = "pointer"
+    visibilityToggle.style.width = "16px"
+    visibilityToggle.style.height = "16px"
+    visibilityToggle.addEventListener("change", () =>
+      toggleVehicleVisibility(car.id, car.is_visible),
+    )
+    visibilityLabel.append(visibilityToggle, document.createTextNode(" Visible"))
+
+    const editButton = document.createElement("button")
+    editButton.className = "action-btn edit"
+    editButton.textContent = "Edit"
+    editButton.addEventListener("click", () => editVehicle(car.id))
+
+    const deleteButton = document.createElement("button")
+    deleteButton.className = "action-btn delete"
+    deleteButton.textContent = "Delete"
+    deleteButton.addEventListener("click", () => deleteVehicle(car.id))
+
+    actions.append(visibilityLabel, editButton, deleteButton)
+    carEl.append(vehicleInfo, actions)
     vehiclesList.appendChild(carEl)
   })
 }
 
 // --- DELETE VEHICLE ---
-window.deleteVehicle = async (id) => {
+async function deleteVehicle(id) {
   if (!confirm("Are you sure you want to delete this vehicle and its photo?"))
     return
 
@@ -184,7 +233,7 @@ window.deleteVehicle = async (id) => {
 }
 
 // --- EDIT VEHICLE ---
-window.editVehicle = async (id) => {
+async function editVehicle(id) {
   try {
     // 1. Fetch the exact car from the database
     const { data, error } = await db
@@ -320,3 +369,16 @@ vehicleForm.addEventListener("submit", async (e) => {
     saveBtn.disabled = false
   }
 })
+
+async function toggleVehicleVisibility(carId, currentState) {
+  const { error } = await db
+    .from("vehicles")
+    .update({ is_visible: !currentState })
+    .eq("id", carId)
+
+  if (error) {
+    alert("Error updating visibility: " + error.message)
+  } else {
+    loadVehicles() // Fixed to match your actual function name
+  }
+}

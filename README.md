@@ -1,31 +1,33 @@
-# Luchetti Auto - Admin Dashboard
+# Luchetti Auto Admin Dashboard
 
-This is the private Content Management System (CMS) for the Luchetti Auto platform. It provides a secure interface for authorized users to manage the live vehicle inventory.
+Private inventory-management dashboard for the Luchetti Auto platform. The administrator can create, edit, publish, unpublish, and delete vehicle listings, including managing their photos.
 
 For the public storefront and full architecture details, check out the [Main Luchetti Auto Repository](https://github.com/lucaa3/luchettiauto).
 
-## Tech Stack
-* **Frontend:** HTML5, CSS3 (Bootstrap), Vanilla JavaScript
-* **Backend & Database:** Supabase (PostgreSQL)
-* **Authentication:** Supabase Auth
+## Built with
+
+- HTML, CSS, and vanilla JavaScript
+- Supabase Auth, PostgreSQL, and Storage
 
 ## Features
-* **Authentication:** Protected login gateway. Public sign-ups are disabled at the database level.
-* **Inventory Management:** Full CRUD operations (Create, Read, Update, Delete) to manage vehicles in the live PostgreSQL database.
-* **Live Sync:** Database changes reflect instantly on the public-facing website.
+
+- Password-authenticated admin access
+- Vehicle inventory management, including visibility controls and image uploads
+- Supabase-backed data used by the public storefront
 
 ## Security
-Security is handled at the database level rather than relying on frontend obscurity:
-* **Row Level Security (RLS):** Write, update, and delete actions require a valid authentication token.
-* **Parameterized Queries:** All database interactions happen via Supabase's PostgREST API, preventing SQL injection.
+
+Vehicle access is enforced with Supabase Row Level Security. In the current deployment, public sign-ups are disabled and only the administrator account is provisioned; write policies apply to authenticated accounts. The dashboard can view hidden listings, while the public storefront displays only vehicles marked visible.
 
 ## Local Setup
-To run this dashboard locally, link it to your own Supabase instance:
-1. Clone the repository.
-2. Create a configuration file (e.g., `config.js`) in your root directory.
-3. Add your Supabase environment variables:
+
+To run the dashboard with your own Supabase project:
+
+1. Clone this repository.
+2. In `dashboard.js`, set `supabaseUrl` and `supabaseKey` to your project URL and browser-safe publishable (or anon) key:
    ```javascript
-   const SUPABASE_URL = 'your-project-url';
-   const SUPABASE_KEY = 'your-anon-key';
+   const supabaseUrl = "your-project-url"
+   const supabaseKey = "your-publishable-or-anon-key"
    ```
-4. Open index.html in your browser or run it via a local development server.
+3. Configure Supabase Auth, the database and Storage policies, and Turnstile for your project. Do not put a service-role or secret key in browser code.
+4. Serve `index.html` from a local development server.
