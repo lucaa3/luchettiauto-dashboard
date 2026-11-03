@@ -15,6 +15,11 @@
   </head>
   <body>
     <main class="admin-container">
+      <div id="saveToast" class="save-toast" role="status" aria-live="polite">
+        <span class="toast-check" aria-hidden="true">✓</span>
+        <span id="saveToastMessage">Everything went smoothly.</span>
+      </div>
+
       <!-- THE LOGIN VAULT -->
       <div id="login-section" class="admin-card">
         <h2 class="text-center">Admin Access</h2>
@@ -41,21 +46,227 @@
         <div id="loginError" class="text-danger"></div>
       </div>
 
+      <section
+        id="mfa-section"
+        class="admin-card mfa-card"
+        aria-labelledby="mfaTitle"
+        hidden
+      >
+        <p class="section-eyebrow">Account security</p>
+        <h2 id="mfaTitle">Set up authenticator</h2>
+        <p id="mfaDescription" class="mfa-description">
+          Scan the QR code with an authenticator app, then enter its six-digit
+          code to secure your account.
+        </p>
+        <div id="mfaSetup" class="mfa-setup" hidden>
+          <img id="mfaQrCode" class="mfa-qr-code" alt="Authenticator setup QR code" />
+          <p class="mfa-manual-copy">
+            Or enter this setup key manually:
+            <code id="mfaSecret"></code>
+          </p>
+        </div>
+        <form id="mfaForm">
+          <div class="input-group">
+            <label class="form-label" for="mfaCode">Authenticator code</label>
+            <input
+              type="text"
+              id="mfaCode"
+              class="form-control"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxlength="6"
+              placeholder="000000"
+              required
+            />
+          </div>
+          <p id="mfaError" class="mfa-error" role="alert" hidden></p>
+          <button type="submit" id="verifyMfaBtn" class="btn btn-primary">
+            Verify code
+          </button>
+        </form>
+        <button type="button" id="mfaLogoutBtn" class="btn-outline mfa-logout">
+          Cancel and log out
+        </button>
+      </section>
+
       <!-- THE DASHBOARD (Hidden until logged in) -->
       <div id="dashboard-section" style="display: none">
+        <header class="dashboard-header">
+          <p
+            id="dashboardLogoutError"
+            class="dashboard-logout-error"
+            role="alert"
+            hidden
+          ></p>
+          <button type="button" id="logoutBtn" class="btn-outline">
+            Logout
+          </button>
+        </header>
+        <section class="admin-card preview-card" aria-labelledby="previewTitle">
+          <div class="preview-heading">
+            <div>
+              <p class="section-eyebrow">Preview environment</p>
+              <h2 id="previewTitle">Development Environment</h2>
+            </div>
+            <span class="preview-mode-tag">PREVIEW MODE</span>
+          </div>
+          <p class="preview-description">
+            Start a temporary preview session to view vehicles marked for
+            testing.
+          </p>
+          <div class="preview-session-status">
+            <span
+              id="previewStatusDot"
+              class="status-dot is-offline"
+              aria-hidden="true"
+            ></span>
+            <span id="previewStatusText" role="status" aria-live="polite">
+              Session Offline
+            </span>
+          </div>
+          <p
+            id="previewSessionError"
+            class="preview-session-error"
+            role="alert"
+            hidden
+          ></p>
+          <div class="preview-actions">
+            <button type="button" id="startPreviewBtn" class="btn btn-primary">
+              Start Session
+            </button>
+            <button
+              type="button"
+              id="stopPreviewBtn"
+              class="btn btn-outline"
+              hidden
+            >
+              Stop Session
+            </button>
+            <details id="openPreviewDropdown" class="preview-dropdown" hidden>
+              <summary class="btn btn-preview-link">
+                Open preview <span aria-hidden="true">▾</span>
+              </summary>
+              <div class="preview-dropdown-menu">
+                <a
+                  id="openPreviewLink"
+                  href="http://127.0.0.1/index.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Local preview (127.0.0.1)
+                </a>
+                <a
+                  id="liveWebsiteLink"
+                  href="https://luchettiauto.com/index.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Live website (luchettiauto.com)
+                </a>
+              </div>
+            </details>
+            <details id="copyPreviewDropdown" class="preview-dropdown" hidden>
+              <summary class="btn btn-outline">
+                Copy preview link <span aria-hidden="true">▾</span>
+              </summary>
+              <div class="preview-dropdown-menu">
+                <button type="button" id="copyLocalPreviewLinkBtn">
+                  Copy local link (127.0.0.1)
+                </button>
+                <button type="button" id="copyLivePreviewLinkBtn">
+                  Copy live link (luchettiauto.com)
+                </button>
+              </div>
+            </details>
+          </div>
+        </section>
+
         <!-- INVENTORY LIST VIEW -->
         <div id="inventory-view" class="admin-card">
           <div class="header-flex">
             <h2>Inventory</h2>
-            <button id="logoutBtn" class="btn-outline">Logout</button>
           </div>
           <button id="showAddFormBtn" class="btn btn-primary mb-4">
             + Add New Vehicle
           </button>
 
-          <!-- Vehicles will be injected here by JavaScript -->
+          <p id="inventoryStatus" class="inventory-status" role="status" aria-live="polite"></p>
           <div id="vehiclesList" class="vehicles-list"></div>
         </div>
+
+        <section class="admin-card audit-card" aria-labelledby="auditTitle">
+          <div class="header-flex">
+            <h2 id="auditTitle">Recent Activity</h2>
+            <button type="button" id="refreshAuditLogBtn" class="btn-outline">
+              Refresh
+            </button>
+          </div>
+          <p
+            id="auditLogStatus"
+            class="audit-log-status"
+            role="status"
+            aria-live="polite"
+          >
+            Activity is loaded when you sign in.
+          </p>
+          <div class="audit-log-filters" aria-label="Activity filters">
+            <div class="audit-filter-field">
+              <label for="auditLogFromDate">From date</label>
+              <input type="date" id="auditLogFromDate" class="form-control" />
+            </div>
+            <div class="audit-filter-field">
+              <label for="auditLogToDate">To date</label>
+              <input type="date" id="auditLogToDate" class="form-control" />
+            </div>
+            <div class="audit-filter-field">
+              <label for="auditLogAction">Action</label>
+              <select id="auditLogAction" class="form-control">
+                <option value="">All actions</option>
+                <option value="insert">Create</option>
+                <option value="update">Edit</option>
+                <option value="delete">Delete</option>
+              </select>
+            </div>
+            <div class="audit-filter-field">
+              <label for="auditLogSort">Order</label>
+              <select id="auditLogSort" class="form-control">
+                <option value="desc">Newest first</option>
+                <option value="asc">Oldest first</option>
+              </select>
+            </div>
+          </div>
+          <ol id="auditLogList" class="audit-log-list"></ol>
+          <nav class="audit-log-pagination" aria-label="Activity pages">
+            <button type="button" id="auditLogPreviousBtn" class="btn-outline">
+              Previous
+            </button>
+            <label class="audit-log-page-jump">
+              <span class="visually-hidden">Go to page</span>
+              <input
+                type="number"
+                id="auditLogPageInput"
+                min="1"
+                step="1"
+                inputmode="numeric"
+                aria-label="Page number"
+                disabled
+              />
+              <span id="auditLogPageStatus" aria-live="polite"></span>
+              <button
+                type="button"
+                id="auditLogGoToPageBtn"
+                class="btn-outline"
+                disabled
+              >
+                Go
+              </button>
+            </label>
+            <button type="button" id="auditLogNextBtn" class="btn-outline">
+              Next
+            </button>
+          </nav>
+        </section>
 
         <!-- ADD/EDIT FORM VIEW (Hidden by default) -->
         <div id="form-view" class="admin-card" style="display: none">
@@ -89,13 +300,14 @@
               </div>
               <div class="input-group half-width">
                 <label class="form-label" for="fuel">Fuel</label>
-                <input
-                  type="text"
-                  id="fuel"
-                  class="form-control"
-                  placeholder="Benzina"
-                  required
-                />
+                <select id="fuel" class="form-control" required>
+                  <option value="" disabled selected>Select fuel</option>
+                  <option value="Benzina">Benzina</option>
+                  <option value="Diesel">Diesel</option>
+                  <option value="GPL">GPL</option>
+                  <option value="Ibrida">Ibrida</option>
+                  <option value="Elettrica">Elettrica</option>
+                </select>
               </div>
             </div>
 
@@ -133,20 +345,55 @@
             </div>
 
             <div class="input-group">
-              <label class="form-label" for="imageFile"
-                >Vehicle Image
-                <span
-                  id="imageOptionalText"
-                  style="color: var(--text-muted); font-size: 0.75rem"
-                ></span
-              ></label>
+              <label class="test-vehicle-control" for="isTestVehicle">
+                <input type="checkbox" id="isTestVehicle" />
+                <span class="test-switch" aria-hidden="true"></span>
+                <span class="test-vehicle-copy">
+                  <strong>Dev / Test Vehicle</strong>
+                  <span>Include this vehicle in the preview environment.</span>
+                </span>
+              </label>
+            </div>
+
+            <div class="input-group">
+              <div class="image-label-row">
+                <label class="form-label" for="imageFile">Vehicle image</label>
+                <span id="imageOptionalText" class="field-hint"></span>
+              </div>
               <input
                 type="file"
                 id="imageFile"
-                class="form-control file-input"
+                class="visually-hidden"
                 accept="image/*"
                 required
               />
+              <label id="imageDropzone" class="image-dropzone" for="imageFile">
+                <span class="upload-icon" aria-hidden="true">↑</span>
+                <span class="dropzone-title">Drop an image here</span>
+                <span class="dropzone-hint"
+                  >or click to browse · JPG, PNG, WEBP · max 5 MB</span
+                >
+              </label>
+              <p
+                id="imageUploadError"
+                class="image-upload-error"
+                role="alert"
+                hidden
+              ></p>
+              <button
+                type="button"
+                id="imagePreview"
+                class="image-preview"
+                aria-label="View vehicle image"
+                hidden
+              >
+                <img id="imagePreviewThumbnail" alt="Vehicle image preview" />
+                <span class="preview-copy">
+                  <strong id="imagePreviewName">Image selected</strong>
+                  <span>Click to view full size</span>
+                </span>
+                <span class="preview-open" aria-hidden="true">↗</span>
+              </button>
             </div>
 
             <button type="submit" id="saveBtn" class="btn btn-primary">
@@ -156,6 +403,60 @@
         </div>
       </div>
     </main>
+
+    <div
+      id="imageModal"
+      class="image-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Vehicle image"
+      hidden
+    >
+      <button
+        type="button"
+        id="imageModalClose"
+        class="modal-close"
+        aria-label="Close image"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+      <img id="imageModalImage" alt="Vehicle full-size preview" />
+    </div>
+
+    <div
+      id="sessionExpiryModal"
+      class="session-expiry-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sessionExpiryTitle"
+      aria-describedby="sessionExpiryDescription"
+      hidden
+    >
+      <section class="session-expiry-card">
+        <p class="section-eyebrow">Session security</p>
+        <h2 id="sessionExpiryTitle">Still there?</h2>
+        <p id="sessionExpiryDescription">
+          You’ll be signed out after 20 minutes of inactivity. Renew your session
+          to keep working.
+        </p>
+        <p
+          id="sessionExpiryError"
+          class="session-expiry-error"
+          role="alert"
+          hidden
+        ></p>
+        <div class="session-expiry-actions">
+          <button type="button" id="renewSessionBtn" class="btn btn-primary">
+            Stay signed in
+          </button>
+          <button type="button" id="expiryLogoutBtn" class="btn-outline">
+            Log out
+          </button>
+        </div>
+      </section>
+    </div>
 
     <script src="dashboard.js"></script>
   </body>
